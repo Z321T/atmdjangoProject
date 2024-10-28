@@ -1,0 +1,35 @@
+.el-container{
+    border:2px solid black;
+    width: 100vh; /* 增加宽度为容器宽度的90% */
+    height: 60vh; /* 增加高度为视口高度的80% */
+    margin: 0px auto; /* 增加外边距，实现上下20px，左右自动，水平居中 */
+    position: relative; /* 设置父容器为相对定位 */
+}
+.el-header{
+  font-size: 40px; /* 设置字体大小为24像素 */
+  --el-header-padding:10px 20px 10px 20px;
+  --el-header-height:80px;
+  text-align: center;
+}
+.el-main {
+    position: relative;
+}
+
+.right-buttons{
+    position:absolute;
+    right:0;
+    display: flex;
+    flex-direction: column; /* 设置flex方向为列 */
+}
+
+.locate-buttom{
+    bottom:8px;
+ }
+
+ .function-maincontent{
+    position: relative;
+    margin:auto;
+    margin-top:15vh;
+    display: flex;
+    justify-content: center;
+ }
