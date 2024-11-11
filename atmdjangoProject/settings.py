@@ -80,10 +80,16 @@ WSGI_APPLICATION = 'atmdjangoProject.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',  # 使用 MySQL 数据库
+        'NAME': 'atm',               # 数据库名称
+        'USER': 'root',               # 数据库用户名
+        'PASSWORD': 'root',       # 数据库密码
+        'HOST': 'localhost',                  # 数据库主机地址
+        'PORT': '3306',                       # 数据库端口
     }
 }
 
@@ -128,3 +134,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SESSION_COOKIE_NAME = 'sessionid'  # Django 默认的会话 cookie 名称
