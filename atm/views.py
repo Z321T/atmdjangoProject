@@ -12,10 +12,14 @@ from .models import Account
 
 @csrf_exempt
 def login(request):
+    # 解析 JSON 请求体
+    import json
+    data = json.loads(request.body)
+
     if request.method == "POST":
         # 获取请求数据
-        card_id = request.POST.get('cardId')
-        password = request.POST.get('password')
+        card_id = data.get('cardId')
+        password = data.get('password')
         print(card_id, password)
 
         # 尝试通过 card_id 查找用户
@@ -30,7 +34,6 @@ def login(request):
         # 检查密码是否匹配
         if user.password == password:
             # 密码匹配，登录成功
-            login(request, user)
             request.session['card_id'] = user.card_id
             print("登录成功！")
             return JsonResponse({"message": "Login successful", "balance": user.balance}, status=status.HTTP_200_OK)
