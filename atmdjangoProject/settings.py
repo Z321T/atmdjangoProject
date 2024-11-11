@@ -136,3 +136,6 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SESSION_COOKIE_NAME = 'sessionid'  # Django 默认的会话 cookie 名称
+
+LOGIN_URL = '/api/login/'
+
