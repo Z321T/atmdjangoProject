@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from corsheaders.defaults import default_headers
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,20 +42,34 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     "atm.apps.AtmConfig",
+    'sslserver'
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    'atm.middleware.PreflightMiddleware',  # 正确的自定义中间件引用
+
+    'django.middleware.common.CommonMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True  # 或者设置允许的具体域名
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # allow requests from this origin
+]
+# 允许跨域时携带 cookie
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'authentication',
+    'content-type',
+    # 其他需要允许的头部
+]
 
 ROOT_URLCONF = 'atmdjangoProject.urls'
 
@@ -138,4 +154,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SESSION_COOKIE_NAME = 'sessionid'  # Django 默认的会话 cookie 名称
 
 LOGIN_URL = '/api/login/'
+
+SESSION_ENGINE='django.contrib.sessions.backends.db'
+
+# 允许通过安全的 HTTPS 和 HTTP 协议发送 cookie
+SESSION_COOKIE_SAMESITE = 'None'  # 允许跨域发送
+SESSION_COOKIE_SECURE = False  # 在开发环境中可以关闭，在生产环境应设置为 True（需 HTTPS）
+
+
+
 
