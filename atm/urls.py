@@ -1,13 +1,13 @@
 from django.urls import path
 from django.contrib.staticfiles.views import serve
-from .views import login, withdraw
+from .views import LoginView, WithdrawView
 
 app_name = 'atm'
 
 urlpatterns = [
 
     path('static/<path:path>', serve),
-    path('login/', login, name='login'),
-    path('withdraw/', withdraw, name='withdraw')
+    path('login/', LoginView.as_view(), name='login'),
+    path('withdraw/', WithdrawView.as_view(), name='withdraw')
 
 ]

@@ -1,100 +1,71 @@
-import json
-from django.shortcuts import render
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import login
-
-from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework import status
-
-from .models import Account
+from rest_framework.exceptions import NotFound, AuthenticationFailed, ValidationError
+from django.contrib.sessions.models import Session
 from decimal import Decimal
+from .models import Account
 
 
-@csrf_exempt
-def login(request):
-    # 解析 JSON 请求体
-    data = json.loads(request.body)
+# 登录视图
+class LoginView(APIView):
+    authentication_classes = []  # 禁用全局的身份验证
+    permission_classes = []  # 禁用全局的权限设置
 
-    if request.method == "POST":
-        # 获取请求数据
+    def post(self, request, *args, **kwargs):
+        # 解析请求数据
+        data = request.data
         card_id = data.get('cardId')
         password = data.get('password')
-        print(card_id, password)
 
-        # 尝试通过 card_id 查找用户
+        if not card_id or not password:
+            raise ValidationError({"message": "Card ID and password are required"})
+
         try:
             user = Account.objects.get(card_id=card_id)
-            print('!!!')
-            print(user)
         except Account.DoesNotExist:
-            # 如果没有找到用户，返回错误响应
-            return JsonResponse({"message": "Invalid card"}, status=status.HTTP_401_UNAUTHORIZED)
+            raise AuthenticationFailed({"message": "Invalid card"})
 
-        # 检查密码是否匹配
         if user.password == password:
-            # 密码匹配，登录成功
+            # 保存到 session
             request.session['card_id'] = user.card_id
-            print("登录成功！")
-            response=JsonResponse({"message": "Login successful", "balance": user.balance}, status=status.HTTP_200_OK)
-            response['Access-Control-Expose-Headers'] = "Authentication"  # 自定义头的key
-            response['Authentication'] = str(user.card_id) # 添加 card_id 到 Authentication 字段
+            response = Response({"message": "Login successful", "balance": user.balance}, status=status.HTTP_200_OK)
+            response['Access-Control-Expose-Headers'] = "Authentication"
+            response['Authentication'] = str(user.card_id)
             return response
         else:
-            # 密码不匹配，返回错误响应
-            print("密码不匹配")
-            return JsonResponse({"message": "Invalid password"}, status=status.HTTP_200_OK)
-
-    # 如果请求方法不是 POST，返回错误响应
-    return JsonResponse({"message": "Invalid request method"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            raise AuthenticationFailed({"message": "Invalid password"})
 
 
-@csrf_exempt
-def withdraw(request):
-    # 解析 JSON 请求体
-    data = json.loads(request.body)
-    # 获取当前登录用户
-    # 获取自定义头部信息，例如 'My-User'
-    card_id = request.META.get('HTTP_AUTHENTICATION')
-    print('@@@@@@@@')
-    print(card_id)
-    if not card_id:
-        print("没登录")
-        return JsonResponse({"error": "User not logged in"}, status=status.HTTP_403_FORBIDDEN)
+# 提现视图
+class WithdrawView(APIView):
+    def post(self, request, *args, **kwargs):
+        # 获取自定义头部信息 'Authentication'
+        card_id = request.headers.get('Authentication')
 
-    # 根据 card_id 获取当前用户对象
-    try:
-        current_user = Account.objects.get(card_id=card_id)
-    except Account.DoesNotExist:
-        # 当数据库中没有找到对应的用户时返回 404 错误
-        return JsonResponse({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        if not card_id:
+            raise AuthenticationFailed({"error": "User not logged in"})
 
-    # 获取请求中的提现金额
-    try:
-        withdrawmoney = data.get('withdrawmoney')
-        # 确保提现金额是有效的数字
-        withdrawmoney = Decimal(withdrawmoney)
-        print(withdrawmoney)
-    except (TypeError, ValueError):
-        return JsonResponse({"error": "Invalid withdraw amount"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            current_user = Account.objects.get(card_id=card_id)
+        except Account.DoesNotExist:
+            raise NotFound({"error": "User not found"})
 
-    # 检查用户是否有足够的余额
-    if withdrawmoney > current_user.balance:
-        return JsonResponse({"error": "Insufficient balance"}, status=status.HTTP_400_BAD_REQUEST)
+        # 解析提现金额
+        try:
+            withdrawmoney = request.data.get('withdrawmoney')
+            withdrawmoney = Decimal(withdrawmoney)
+        except (TypeError, ValueError):
+            raise ValidationError({"error": "Invalid withdraw amount"})
 
-    # 更新用户的 balance
-    try:
-        current_user.balance -= withdrawmoney
-        current_user.save()
-        # 返回成功响应
-        print('余额更新成功')
-        print(current_user.balance)
-        return JsonResponse({"message": "Withdraw successful", "new_balance": current_user.balance},
+        if withdrawmoney > current_user.balance:
+            raise ValidationError({"error": "Insufficient balance"})
+
+        # 更新余额
+        try:
+            current_user.balance -= withdrawmoney
+            current_user.save()
+            return Response({"message": "Withdraw successful", "new_balance": current_user.balance},
                             status=status.HTTP_200_OK)
-    except Exception as e:
-        print('余额更新失败')
-        print(e)
-        return JsonResponse({"error": "Failed to update balance"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
+        except Exception as e:
+            return Response({"error": "Failed to update balance"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

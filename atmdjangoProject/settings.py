@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     "atm.apps.AtmConfig",
-    'sslserver'
 ]
 
 MIDDLEWARE = [
@@ -155,7 +154,7 @@ SESSION_COOKIE_NAME = 'sessionid'  # Django 默认的会话 cookie 名称
 
 LOGIN_URL = '/api/login/'
 
-SESSION_ENGINE='django.contrib.sessions.backends.db'
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 # 允许通过安全的 HTTPS 和 HTTP 协议发送 cookie
 SESSION_COOKIE_SAMESITE = 'None'  # 允许跨域发送
