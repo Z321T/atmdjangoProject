@@ -59,12 +59,14 @@ class WithdrawView(APIView):
             raise ValidationError({"error": "Invalid withdraw amount"})
 
         if withdrawmoney > current_user.balance:
-            raise ValidationError({"error": "Insufficient balance"})
+            return Response({"message": "Withdraw failure", "new_balance": current_user.balance},
+                            status=status.HTTP_200_OK)
 
         # 更新余额
         try:
             current_user.balance -= withdrawmoney
             current_user.save()
+            print(current_user.balance)
             return Response({"message": "Withdraw successful", "new_balance": current_user.balance},
                             status=status.HTTP_200_OK)
         except Exception as e:

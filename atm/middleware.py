@@ -13,7 +13,7 @@ class PreflightMiddleware:
             # 创建一个空的HttpResponse对象
             response = HttpResponse(status=200)
             # 设置CORS相关的头部
-            response['Access-Control-Allow-Origin'] = ' http://localhost:5173'  # 允许的源
+            response['Access-Control-Allow-Origin'] = ' http://localhost:5174'  # 允许的源
             response['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'  # 允许的方法
             response['Access-Control-Allow-Headers'] = ('Origin, X-Requested-With, Content-Type, Accept, '
                                                         'Authorization, Authentication')
