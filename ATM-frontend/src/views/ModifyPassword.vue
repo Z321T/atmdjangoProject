@@ -39,7 +39,7 @@
           type="success"
           @click="newPassword"
         >确认</el-button>
-        <el-button class="return">返回</el-button>
+        <el-button class="return" @click="Return">返回</el-button>
       </el-main>
 
     </el-container>
@@ -64,8 +64,16 @@ const Form = ref({
   passwordB: "",
 });
 
+const Return = () => {
+  router.push("/SelectService");
+};
 //传给后端
 const newPassword = () => {
+  if (!http) {
+    console.error("Axios instance is not provided");
+    return;
+  }
+
   if (Form.value.passwordA === Form.value.passwordB) {
     // 从localStorage中获取之前存储的Authentication值
     const authHeaderValue = localStorage.getItem("Authentication");
