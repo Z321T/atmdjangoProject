@@ -1,22 +1,32 @@
 <template>
- <div class="common-layout">
+  <div class="common-layout">
     <el-container>
-        <el-main>
-            <div class="center-content">请取走您的卡片</div>
-        </el-main>
+      <el-header>请取走您的卡片<br>Please take your card</el-header>
+      <el-main>
+        <el-button
+          type="primary"
+          @click="toInsertCard"
+        >确认/Confirm</el-button>
+      </el-main>
+
     </el-container>
-    </div>
+  </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import { useRouter } from "vue-router";
+const router = useRouter();
 
+const toInsertCard = () => {
+  router.push("/InsertCard");
+};
 </script>
 
 <style scoped>
-.certer-content{
-    font-size:100px;
-    /* display:flex;
-    justify-content:center ;
-    align-items: center;     垂直居中 */
+.el-button--primary {
+  position: absolute;
+  bottom: 5vh; /* 底部对齐 */
+  right: 5vh; /* 右侧对齐 */
 }
 </style>
+

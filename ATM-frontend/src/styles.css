@@ -12,24 +12,43 @@
   text-align: center;
 }
 .el-main {
+  display: flex;
+  justify-content: space-between;
     position: relative;
 }
 
+.el-footer{
+  font-size: 20px; /* 设置字体大小为24像素 */
+    text-align: center;
+  }
+
 .right-buttons{
-    position:absolute;
-    right:0;
+    /* position:absolute;
+    right:0; */
     display: flex;
     flex-direction: column; /* 设置flex方向为列 */
+    justify-content: space-between; /* 均匀分布子元素 */
+   align-items: flex-end; /* 右对齐子元素 */
+}
+/* 第一个按钮的特殊样式 */
+.el-button:first-child {
+  margin-top: 0;
 }
 
+.left-buttons{
+  /* position:absolute;
+  left:0; */
+  justify-content: flex-start; /* 左对齐按钮 */
+  display: flex;
+  justify-content: space-between; /* 均匀分布子元素 */
+  flex-direction: column; /* 设置flex方向为列 */
+
+}
 .locate-buttom{
     bottom:8px;
  }
-
- .function-maincontent{
-    position: relative;
-    margin:auto;
-    margin-top:15vh;
-    display: flex;
-    justify-content: center;
- }
+ .return {
+  position: absolute;
+  bottom: 5vh; /* 底部对齐 */
+  left: 5vh; /* 右侧对齐 */
+}

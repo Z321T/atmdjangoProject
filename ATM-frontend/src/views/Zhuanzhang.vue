@@ -1,7 +1,7 @@
 <template>
   <div class="common-layout">
     <el-container>
-      <el-header>请输入您的个人密码</el-header>
+      <el-header></el-header>
 
       <el-main>
         <el-form
@@ -12,22 +12,22 @@
           class="demo-ruleForm"
         >
           <el-form-item
-            label="卡号"
-            prop="cardId"
+            label="请输入转入账户："
+            prop="account"
           >
             <el-input
-              v-model="Form.cardId"
+              v-model="Form.account"
               type="number"
               autocomplete="off"
             />
           </el-form-item>
           <el-form-item
-            label="密码"
-            prop="password"
+            label="请输入转账金额："
+            prop="amount"
           >
             <el-input
-              v-model="Form.password"
-              type="password"
+              v-model="Form.amount"
+              type="number"
               autocomplete="off"
             />
           </el-form-item>
@@ -38,11 +38,14 @@
         </el-form>
         <el-button
           type="success"
-          @click=transferPassword()
-        >确认/Confirm</el-button>
+          @click="zhuanZhang()"
+        >确认</el-button>
+        <el-button
+          class="return"
+          @click="toSelectService"
+        >返回</el-button>
       </el-main>
-      <el-footer>PLEASE KEY IN <br> YOUR PERSONAL IDENTIFICATION
-        NUMBER</el-footer>
+
     </el-container>
   </div>
 </template>
@@ -61,36 +64,51 @@ if (!http) {
 
 //表格数据
 const Form = ref({
-  cardId: "",
-  password: "",
+  account: "",
+  amount: "",
 });
 
-const transferPassword = () => {
-  console.log("click success!");
+//传给后端
+const zhuanZhang = () => {
+  // 从localStorage中获取之前存储的Authentication值
+  const authHeaderValue = localStorage.getItem("Authentication");
+
+  // 构建请求的headers对象，包含Authentication头
+  const headers = {
+    "Content-Type": "application/json",
+    Authentication: authHeaderValue, // 添加Authentication头
+  };
+
   http
-    .post("/api/login/", {
-      cardId: Form.value.cardId,
-      password: Form.value.password,
-    })
+    .post(
+      "/api/transfer/",
+      {
+        account: Form.value.account,
+        amount: Form.value.amount,
+      },
+      {
+        headers: headers, // 包含自定义headers
+      }
+    )
     .then((res) => {
-      // 登录成功后存储 token
+      console.log(res.data);
       const message = res.data.message;
-      if (message === "Login successful") {
-        // 从响应头中获取Authentication字段的值
-        const authHeader = res.headers.get("Authentication");
-        if (authHeader) {
-          // 将Authentication字段的值存储到localStorage
-          localStorage.setItem("Authentication", authHeader);
-        }
-        router.push("/SelectService"); // 替换为您想要重定向到的路由
+      if (message === "Transfer successful") {
+        console.log("success!!!!");
+        router.push("/TransferSuccess");
       } else {
-        router.push("/InvalidPass");
+        console.log("failure!!!");
+        router.push("/TransferFail");
       }
     })
     .catch((error) => {
-      console.error("Error during login:", error);
-      router.push("/InvalidPass");
+      console.error("Error during transfer:", error);
+      router.push("/TransferFail");
     });
+};
+
+const toSelectService = () => {
+  router.push("/SelectService");
 };
 </script>
 

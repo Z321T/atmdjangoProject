@@ -59,7 +59,7 @@ MIDDLEWARE = [
 
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5174",  # allow requests from this origin
+    "http://localhost:5173",  # allow requests from this origin
 ]
 # 允许跨域时携带 cookie
 CORS_ALLOW_CREDENTIALS = True
