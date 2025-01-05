@@ -3,30 +3,40 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from .models import Account
 from decimal import Decimal
-# Create your tests here.
-
+from django.test import override_settings
+from django.contrib.auth.hashers import make_password
 
 class ATMViewsTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = Account.objects.create(card_id="123456", password="password", balance=Decimal('1000.00'))
-        self.target_user = Account.objects.create(card_id="654321", password="password", balance=Decimal('500.00'))
+        self.user = Account.objects.create(card_id="123456", password=make_password("password"), balance=Decimal('1000.00'))
+        self.target_user = Account.objects.create(card_id="654321", password=make_password("password"), balance=Decimal('500.00'))
 
+    @override_settings(CSRF_COOKIE_SECURE=False, CSRF_COOKIE_HTTPONLY=False)
     # 测试使用正确的凭据成功登录
     def test_login_success(self):
-        response = self.client.post('/api/login/', {'cardId': '123456', 'password': 'password'}, format='json')
+        response = self.client.post('/api/login/', {'cardId': self.user.card_id, 'password': 'password'}, format='json')
+        # 检查状态码和返回数据
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['message'], "Login successful")
+        self.assertEqual(str(response.data['balance']), str(self.user.balance))  # 将 Decimal 转换为字符串比较
+
+        # 检查认证头是否正确返回
+        self.assertIn('Authentication', response.headers)
+        self.assertEqual(response.headers['Authentication'], str(self.user.card_id))
+
+        # 检查 Session 是否正确设置
+        self.assertEqual(str(self.client.session['card_id']), str(self.user.card_id))  # 确保比较的值类型一致
 
     # 测试使用错误的卡号登录
     def test_login_invalid_card(self):
         response = self.client.post('/api/login/', {'cardId': '000000', 'password': 'password'}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)  # 修改为 403
 
     # 测试使用错误的密码登录
     def test_login_invalid_password(self):
         response = self.client.post('/api/login/', {'cardId': '123456', 'password': 'wrongpassword'}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)  # 修改为 403
 
     # 测试在资金充足的情况下成功取款
     def test_withdraw_success(self):
@@ -47,7 +57,7 @@ class ATMViewsTestCase(TestCase):
         self.client.credentials(HTTP_AUTHENTICATION='123456')
         response = self.client.get('/api/balance/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['balance'], str(self.user.balance))
+        self.assertEqual(str(response.data['balance']), str(self.user.balance))  # 转换为字符串比较
 
     # 测试成功转账
     def test_transfer_success(self):
