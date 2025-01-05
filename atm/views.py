@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import NotFound, AuthenticationFailed, ValidationError
+from django.contrib.auth.hashers import check_password, make_password
 from decimal import Decimal
 from .models import Account
 
@@ -25,7 +26,7 @@ class LoginView(APIView):
         except Account.DoesNotExist:
             raise AuthenticationFailed({"message": "Invalid card"})
 
-        if user.password == password:
+        if check_password(password, user.password):
             # 保存到 session
             request.session['card_id'] = user.card_id
             response = Response({"message": "Login successful", "balance": user.balance}, status=status.HTTP_200_OK)
@@ -65,7 +66,6 @@ class WithdrawView(APIView):
         try:
             current_user.balance -= withdrawmoney
             current_user.save()
-            print(current_user.balance)
             return Response({"message": "Withdraw successful", "new_balance": current_user.balance},
                             status=status.HTTP_200_OK)
         except Exception as e:
@@ -190,7 +190,7 @@ class ChangePasswordView(APIView):
 
         # 更新密码
         try:
-            current_user.password = new_password
+            current_user.password = make_password(new_password)
             current_user.save()
             return Response({"message": "Password changed successfully"}, status=status.HTTP_200_OK)
         except Exception as e:

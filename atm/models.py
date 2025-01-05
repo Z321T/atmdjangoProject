@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
-
 from django.db import models
+from django.contrib.auth.hashers import make_password, check_password
 
 
 # Create your models here.
@@ -16,8 +16,14 @@ class Account(models.Model):
     def __str__(self):
         return str(self.card_id)
 
-    def validate_pin(self, pin):
-        return self.password == pin
+    def set_password(self, raw_password):
+        """加密并设置密码"""
+        self.password = make_password(raw_password)
+        self.save()
+
+    def validate_pin(self, raw_password):
+        """验证密码"""
+        return check_password(raw_password, self.password)
 
     def check_balance(self):
         return self.balance
