@@ -128,3 +128,57 @@ class SecurityModule(models.Model):
     def decrypt_data(self, data):
         # 这里可以实现具体的解密算法
         return data.replace("encrypted_", "")
+
+
+# ATM 类
+class ATM(models.Model):
+    atm_id = models.CharField(max_length=50, primary_key=True)  # ATM 的唯一标识符
+    location = models.CharField(max_length=100)  # ATM 的位置
+    bank_network = models.ForeignKey(BankNetwork, on_delete=models.CASCADE)  # ATM 所属的银联系统
+    security_module = models.ForeignKey(SecurityModule, on_delete=models.CASCADE)  # ATM 使用的安全模块
+
+    def authenticate_card(self, card_number, pin):
+        if self.bank_network.validate_account(card_number):
+            decrypted_pin = self.security_module.decrypt_data(pin)
+            return self.bank_network.registered_accounts.get(card_id=card_number).validate_pin(decrypted_pin)
+        return False
+
+    def process_transaction(self, transaction):
+        return self.bank_network.process_transaction(transaction)
+
+    def update_account_info(self, account):
+        self.bank_network.update_account_info(account)
+        return True
+
+
+# Card 类
+class Card(models.Model):
+    card_number = models.CharField(max_length=50, primary_key=True)  # 卡号
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # 持卡人
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)  # 关联的账户
+    expiration_date = models.DateField()  # 过期日期
+    cvv = models.CharField(max_length=3)  # 安全码
+
+    def authenticate(self, pin):
+        return self.user.authenticate(pin)
+
+    def check_balance(self):
+        return self.account.check_balance()
+
+    def withdraw(self, amount):
+        transaction = Transaction(type='withdraw', amount=amount, from_account=self.account)
+        if transaction.execute():
+            return transaction.generate_record()
+        return "Withdrawal failed"
+
+    def deposit(self, amount):
+        transaction = Transaction(type='deposit', amount=amount, from_account=self.account)
+        if transaction.execute():
+            return transaction.generate_record()
+        return "Deposit failed"
+
+    def transfer(self, amount, target_account):
+        transaction = Transaction(type='transfer', amount=amount, from_account=self.account, to_account=target_account)
+        if transaction.execute():
+            return transaction.generate_record()
+        return "Transfer failed"
